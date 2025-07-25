@@ -1,4 +1,5 @@
 # graphlib
+[![Go Report Card](https://goreportcard.com/badge/github.com/aio-arch/graphlib)](https://goreportcard.com/report/github.com/aio-arch/graphlib)
 
 A Topological sort lib.
 
