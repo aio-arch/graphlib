@@ -1,18 +1,18 @@
 package graphlib
 
 type nodeInfo[V comparable] struct {
-	SortIdx         uint       //Sort idx
-	PredecessorNums uint       //Number of parent nodes
-	SuccessorNums   uint       //Record next Successor append index
-	Successor       map[V]uint //Child Nodes
+	SortIdx         uint //Sort idx
+	PredecessorNums uint //Number of parent nodes
+	Successors      []V  //Child Nodes
 }
 
-func (n *nodeInfo[V]) SuccessorSortSet() []V {
-	set := make([]V, n.SuccessorNums)
-	for node, idx := range n.Successor {
-		set[idx] = node
+func (ni *nodeInfo[V]) hasSuccessor(node V) bool {
+	for _, successor := range ni.Successors {
+		if successor == node {
+			return true
+		}
 	}
-	return set
+	return false
 }
 
 type Graph[V comparable] struct {
@@ -31,8 +31,8 @@ func (g *Graph[V]) AddNode(node V) *nodeInfo[V] {
 		return result
 	}
 	result := nodeInfo[V]{
-		SortIdx:   g.nodeNums,
-		Successor: make(map[V]uint, 2),
+		SortIdx:    g.nodeNums,
+		Successors: make([]V, 0, 2),
 	}
 	g.node2info[node] = &result
 	g.nodeNums++
@@ -48,9 +48,8 @@ func (g *Graph[V]) AddEdge(from, to V) {
 	if t, has = g.node2info[to]; !has {
 		panic(ErrUnknownNode[V]{node: to})
 	}
-	if _, has := f.Successor[to]; !has {
-		f.Successor[to] = f.SuccessorNums
-		f.SuccessorNums++
+	if !f.hasSuccessor(to) {
+		f.Successors = append(f.Successors, to)
 		t.PredecessorNums++
 	}
 }
@@ -98,7 +97,7 @@ func (g *Graph[V]) IsAcyclic() ([]V, bool) {
 			} else {
 				seen[node] = struct{}{}
 				itStack = append(itStack, iterItem[V]{isEnd: true})
-				for _, successor := range g.node2info[node].SuccessorSortSet() {
+				for _, successor := range g.node2info[node].Successors {
 					itStack = append(itStack, iterItem[V]{val: successor})
 				}
 				node2stacki[node] = len(stack)
