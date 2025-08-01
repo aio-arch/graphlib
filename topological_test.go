@@ -4,9 +4,21 @@ import (
 	"errors"
 	"strconv"
 	"testing"
-
-	"golang.org/x/exp/slices"
 )
+
+// golang.org/x/exp/slices.Equal
+// support golang version < 1.21
+func slicesEqual[S ~[]E, E comparable](s1, s2 S) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}
 
 func TestTopologicalOrder(t *testing.T) {
 	cases := []struct {
@@ -73,7 +85,7 @@ func TestTopologicalOrder(t *testing.T) {
 			if err != nil && !errors.As(err, &errCycle) {
 				t.Errorf("expect wantError=ErrCycle, got=%v", err.Error())
 			}
-			if !slices.Equal(topo, tt.want) {
+			if !slicesEqual(topo, tt.want) {
 				t.Errorf("expect want=%v, got=%v", tt.want, topo)
 			}
 		})
@@ -164,7 +176,7 @@ func TestTopologicalPrune(t *testing.T) {
 				}
 			} else {
 				topo, _ := TopologicalOrder(target)
-				if !slices.Equal(topo, tt.want) {
+				if !slicesEqual(topo, tt.want) {
 					t.Errorf("expect want=%v, got=%v", tt.want, topo)
 				}
 			}

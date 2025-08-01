@@ -3,8 +3,6 @@ package graphlib
 import (
 	"strconv"
 	"testing"
-
-	"golang.org/x/exp/slices"
 )
 
 func TestAddEdge(t *testing.T) {
@@ -89,7 +87,7 @@ func TestIsAcyclic_string(t *testing.T) {
 			if ok != tt.want {
 				t.Errorf("expect want=%v, got=%v", tt.want, ok)
 			}
-			if !slices.Equal(cycle, tt.cycle) {
+			if !slicesEqual(cycle, tt.cycle) {
 				t.Errorf("expect want=%v, got=%v", tt.cycle, cycle)
 			}
 		})
@@ -132,7 +130,7 @@ func TestIsAcyclic_int(t *testing.T) {
 			if ok != tt.want {
 				t.Errorf("expect want=%v, got=%v", tt.want, ok)
 			}
-			if !slices.Equal(cycle, tt.cycle) {
+			if !slicesEqual(cycle, tt.cycle) {
 				t.Errorf("expect want=%v, got=%v", tt.cycle, cycle)
 			}
 		})

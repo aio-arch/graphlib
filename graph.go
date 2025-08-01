@@ -72,13 +72,15 @@ func (g *Graph[V]) Add(node V, predecessors ...V) {
 	}
 }
 
+type iterItem[V comparable] struct {
+	val   V
+	isEnd bool
+}
+
 // IsAcyclic checks if the graph is acyclic. If not, return the first detected cycle.
 // it using https://github.com/python/cpython/blob/3.14/Lib/graphlib.py#L202 _find_cycle method
 func (g *Graph[V]) IsAcyclic() ([]V, bool) {
-	type iterItem[V comparable] struct {
-		val   V
-		isEnd bool
-	}
+	
 	stack := make([]V, 0, len(g.node2info))
 	itStack := make([]iterItem[V], 0, len(g.node2info))
 	seen := make(map[V]struct{}, len(g.node2info))
