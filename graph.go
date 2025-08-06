@@ -1,10 +1,19 @@
 package graphlib
 
 type nodeInfo[V comparable] struct {
-	SortIdx         uint //Sort idx
-	PredecessorNums uint //Number of parent nodes
-	Successors      []V  //Child Nodes
+	SortIdx      uint //Sort idx
+	Predecessors []V  //parent nodes
+	Successors   []V  //Child Nodes
 }
+
+// func (ni *nodeInfo[V]) hasPredecessor(node V) bool {
+// 	for _, predecessor := range ni.Predecessors {
+// 		if predecessor == node {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func (ni *nodeInfo[V]) hasSuccessor(node V) bool {
 	for _, successor := range ni.Successors {
@@ -31,8 +40,9 @@ func (g *Graph[V]) AddNode(node V) *nodeInfo[V] {
 		return result
 	}
 	result := nodeInfo[V]{
-		SortIdx:    g.nodeNums,
-		Successors: make([]V, 0, 2),
+		SortIdx:      g.nodeNums,
+		Predecessors: make([]V, 0, 2),
+		Successors:   make([]V, 0, 2),
 	}
 	g.node2info[node] = &result
 	g.nodeNums++
@@ -50,7 +60,7 @@ func (g *Graph[V]) AddEdge(from, to V) {
 	}
 	if !f.hasSuccessor(to) {
 		f.Successors = append(f.Successors, to)
-		t.PredecessorNums++
+		t.Predecessors = append(t.Predecessors, from)
 	}
 }
 
@@ -80,7 +90,6 @@ type iterItem[V comparable] struct {
 // IsAcyclic checks if the graph is acyclic. If not, return the first detected cycle.
 // it using https://github.com/python/cpython/blob/3.14/Lib/graphlib.py#L202 _find_cycle method
 func (g *Graph[V]) IsAcyclic() ([]V, bool) {
-	
 	stack := make([]V, 0, len(g.node2info))
 	itStack := make([]iterItem[V], 0, len(g.node2info))
 	seen := make(map[V]struct{}, len(g.node2info))

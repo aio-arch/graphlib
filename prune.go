@@ -12,52 +12,26 @@ type topologicalPrune[V comparable] struct {
 // }
 
 func (tp *topologicalPrune[V]) prune(nodes []V) *Graph[V] {
-
-	traversed := make(map[V]int, len(nodes))
-	readyNodes := make(map[V]uint, len(nodes))
-	childNodes := make(map[V]uint, len(nodes))
+	waitNodes := make(map[V]struct{}, len(nodes))
+	traversed := make(map[V]struct{}, len(nodes))
 	for _, node := range nodes {
-		nodeInfo := tp.graph.node2info[node]
-		readyNodes[node] = nodeInfo.PredecessorNums
+		waitNodes[node] = struct{}{}
 	}
-
-	for len(readyNodes) > 0 {
-		for node, predecessorNums := range readyNodes {
-
-			delete(readyNodes, node)
-			traversed[node] = 0
-			if predecessorNums == 0 {
-				tp.target.AddNode(node)
-			} else {
-				childNodes[node] = predecessorNums
-			}
-		}
-
-		for node, info := range tp.graph.node2info {
-			traversedSuccessorNums, ok := traversed[node]
-			if ok && len(info.Successors) == traversedSuccessorNums {
+	for len(waitNodes) > 0 {
+		for node := range waitNodes {
+			delete(waitNodes, node)
+			if _, has := traversed[node]; has {
 				continue
 			}
-
-			var ready bool
-			for _, successor := range info.Successors {
-				if successorPredecessorNums, has := childNodes[successor]; has {
-					ready = true
-					tp.target.Add(successor, node)
-					traversed[node] = traversedSuccessorNums + 1
-					if successorPredecessorNums == 1 {
-						delete(childNodes, successor)
-					} else {
-						childNodes[successor] = successorPredecessorNums - 1
-					}
-				}
-
+			traversed[node] = struct{}{}
+			nodeInfo := tp.graph.node2info[node]
+			if len(nodeInfo.Predecessors) == 0 {
+				tp.target.AddNode(node)
+				continue
 			}
-			if ready && info.PredecessorNums > 0 {
-				readyNodes[node] = info.PredecessorNums
-			}
-			if len(childNodes) == 0 {
-				break
+			for _, predecessor := range nodeInfo.Predecessors {
+				tp.target.Add(node, predecessor)
+				waitNodes[predecessor] = struct{}{}
 			}
 		}
 	}

@@ -2,9 +2,9 @@ package graphlib
 
 type topologicalOrder[V comparable] struct {
 	graph         *Graph[V]
-	traversedNums uint
-	traversed     map[V]uint
-	notReadyNodes map[V]uint
+	traversedNums uint       // next traversed node idx
+	traversed     map[V]uint // traversed node idx
+	notReadyNodes map[V]int  // node with predecessor node's nums
 }
 
 func (ts *topologicalOrder[V]) done(nodes *[]V) []V {
@@ -16,11 +16,12 @@ func (ts *topologicalOrder[V]) done(nodes *[]V) []V {
 		nodeInfo := ts.graph.node2info[node]
 		for _, successor := range nodeInfo.Successors {
 			successorInfo := ts.graph.node2info[successor]
-			if successorInfo.PredecessorNums == 1 || ts.notReadyNodes[successor] == 1 {
+			predecessorNums := len(successorInfo.Predecessors)
+			if predecessorNums == 1 || ts.notReadyNodes[successor] == 1 {
 				readyNodes = append(readyNodes, successor)
 				delete(ts.notReadyNodes, successor)
 			} else {
-				ts.notReadyNodes[successor] = successorInfo.PredecessorNums - 1
+				ts.notReadyNodes[successor] = predecessorNums - 1
 			}
 		}
 	}
@@ -32,7 +33,7 @@ func (ts *topologicalOrder[V]) traverse() {
 	rootNodes := make([]V, 0, len(ts.graph.node2info)/2)
 	for _, v := range ts.graph.NodeSortSet() {
 		nodeInfo := ts.graph.node2info[v]
-		if nodeInfo.PredecessorNums == 0 {
+		if len(nodeInfo.Predecessors) == 0 {
 			rootNodes = append(rootNodes, v)
 		}
 	}
@@ -48,7 +49,7 @@ func graphOrder[V comparable](g *Graph[V]) []V {
 	ts := topologicalOrder[V]{
 		graph:         g,
 		traversed:     make(map[V]uint, nodeLen),
-		notReadyNodes: make(map[V]uint, nodeLen),
+		notReadyNodes: make(map[V]int, nodeLen),
 	}
 	ts.traverse()
 

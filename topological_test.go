@@ -1,7 +1,6 @@
 package graphlib
 
 import (
-	"errors"
 	"strconv"
 	"testing"
 )
@@ -22,8 +21,9 @@ func slicesEqual[S ~[]E, E comparable](s1, s2 S) bool {
 
 func TestTopologicalOrder(t *testing.T) {
 	cases := []struct {
-		graph [][]string
-		want  []string
+		graph   [][]string
+		want    []string
+		wantErr error
 	}{
 		{
 			graph: [][]string{
@@ -70,7 +70,8 @@ func TestTopologicalOrder(t *testing.T) {
 				{"B", "A"},
 				{"C", "B", "A"},
 			},
-			want: []string{},
+			want:    []string{},
+			wantErr: &ErrCycle[string]{[]string{"A", "C", "A"}},
 		},
 	}
 
@@ -81,8 +82,7 @@ func TestTopologicalOrder(t *testing.T) {
 				g.Add(vals[0], vals[1:]...)
 			}
 			topo, err := TopologicalOrder(g)
-			var errCycle *ErrCycle[string]
-			if err != nil && !errors.As(err, &errCycle) {
+			if err != nil && err.Error() != tt.wantErr.Error() {
 				t.Errorf("expect wantError=ErrCycle, got=%v", err.Error())
 			}
 			if !slicesEqual(topo, tt.want) {
